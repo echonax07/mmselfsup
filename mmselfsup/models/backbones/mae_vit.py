@@ -58,6 +58,7 @@ class MAEViT(VisionTransformer):
                  patch_cfg: dict = dict(),
                  layer_cfgs: dict = dict(),
                  mask_ratio: float = 0.75,
+                 in_chans: int = 3,
                  init_cfg: Optional[Union[List[dict], dict]] = None) -> None:
         super().__init__(
             arch=arch,
@@ -72,6 +73,7 @@ class MAEViT(VisionTransformer):
             interpolate_mode=interpolate_mode,
             patch_cfg=patch_cfg,
             layer_cfgs=layer_cfgs,
+            in_channels=in_chans,
             init_cfg=init_cfg)
 
         # position embedding is not learnable during pretraining

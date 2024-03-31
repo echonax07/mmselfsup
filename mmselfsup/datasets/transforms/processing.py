@@ -1255,3 +1255,45 @@ class RandomRotation(BaseTransform):
         if self.fill is not None:
             repr_str += f', fill={self.fill})'
         return repr_str
+
+
+
+@TRANSFORMS.register_module()
+class NantoNum(BaseTransform):
+    """Convert Nan values to a num.
+
+    Required Keys:
+
+    - img
+
+    Modified Keys:
+
+    - img
+
+    Args:
+        nan (float, optional): The nan value to convert to.
+            Defaults to 255.
+    """
+
+    def __init__(self, nan: float = 255) -> None:
+        super().__init__()
+
+        self.nan = nan
+
+    def transform(self, results: dict) -> dict:
+        """Apply Solarize augmentation to the given image.
+
+        Args:
+            results (dict): Results from previous pipeline.
+
+        Returns:
+            dict: Results after applying this transformation.
+        """
+        img = results['img']
+        results['img'] =  np.nan_to_num(results['img'], nan=self.nan)
+        return results
+
+    def __repr__(self) -> str:
+        repr_str = self.__class__.__name__
+        repr_str += f'nan = {self.nan})'
+        return repr_str

@@ -57,7 +57,7 @@ class MAE(BaseModel):
 
         mask = self.mask.detach()
         mask = mask.unsqueeze(-1).repeat(1, 1, self.head.patch_size**2 *
-                                         3)  # (N, H*W, p*p*3)
+                                         2)  # (N, H*W, p*p*3)
         mask = self.head.unpatchify(mask)  # 1 is removing, 0 is keeping
         mask = torch.einsum('nchw->nhwc', mask).detach().cpu()
 

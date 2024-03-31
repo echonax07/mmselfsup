@@ -11,48 +11,56 @@ import torch
 from mmengine.dataset import Compose, default_collate
 
 from mmselfsup.apis import inference_model, init_model
-
-imagenet_mean = np.array([0.485, 0.456, 0.406])
-imagenet_std = np.array([0.229, 0.224, 0.225])
+from icecream import ic
 
 
-def show_image(img: torch.Tensor, title: str = '') -> None:
-    # image is [H, W, 3]
-    assert img.shape[2] == 3
-
-    plt.imshow(img)
-    plt.title(title, fontsize=16)
-    plt.axis('off')
-    return
+imagenet_mean = np.array([-14.508254953309349, -24.701211250236728])
+imagenet_std = np.array([5.659745919326586, 4.746759336539111])
 
 
 def save_images(original_img: torch.Tensor, img_masked: torch.Tensor,
                 pred_img: torch.Tensor, img_paste: torch.Tensor,
                 out_file: str) -> None:
-    # make the plt figure larger
-    plt.rcParams['figure.figsize'] = [24, 6]
+    # Create a new figure and four axes
+    fig, axes = plt.subplots(2, 4, figsize=(16, 4))
+    
+    original_img = recover_norm(original_img)
+    img_masked = recover_norm(img_masked)
+    pred_img = recover_norm(pred_img)
+    img_paste = recover_norm(img_paste)
 
-    plt.subplot(1, 4, 1)
-    show_image(original_img, 'original')
+    # Plot HH image and add colorbars
+    plot_with_colorbar(fig, original_img[0, :, :, 0], axes[0, 0], 'original')
+    plot_with_colorbar(fig, img_masked[0, :, :, 0], axes[0, 1], 'masked')
+    plot_with_colorbar(fig, pred_img[0, :, :, 0], axes[0, 2], 'reconstruction')
+    plot_with_colorbar(
+        fig, img_paste[0, :, :, 0], axes[0, 3], 'reconstruction + visible')
 
-    plt.subplot(1, 4, 2)
-    show_image(img_masked, 'masked')
+    # Plot HV image and add colorbars
+    plot_with_colorbar(fig, original_img[0, :, :, 1], axes[1, 0], 'original')
+    plot_with_colorbar(fig, img_masked[0, :, :, 1], axes[1, 1], 'masked')
+    plot_with_colorbar(fig, pred_img[0, :, :, 1], axes[1, 2], 'reconstruction')
+    plot_with_colorbar(
+        fig, img_paste[0, :, :, 1], axes[1, 3], 'reconstruction + visible')
 
-    plt.subplot(1, 4, 3)
-    show_image(pred_img, 'reconstruction')
-
-    plt.subplot(1, 4, 4)
-    show_image(img_paste, 'reconstruction + visible')
-
+    # Adjust layout and save figure
+    plt.tight_layout()
     plt.savefig(out_file)
     print(f'Images are saved to {out_file}')
+
+
+def plot_with_colorbar(fig: plt.Figure, img: torch.Tensor, ax: plt.Axes, title: str) -> None:
+    im = ax.imshow(img, cmap='gray')
+    ax.set_title(title, fontsize=8)
+    ax.axis('off')
+    fig.colorbar(im, ax=ax, shrink=0.6)
 
 
 def recover_norm(img: torch.Tensor,
                  mean: np.ndarray = imagenet_mean,
                  std: np.ndarray = imagenet_std):
     if mean is not None and std is not None:
-        img = torch.clip((img * std + mean) * 255, 0, 255).int()
+        img = img*std + mean
     return img
 
 
@@ -66,18 +74,36 @@ def post_process(
     # channel conversion
     original_img = torch.einsum('nchw->nhwc', original_img.cpu())
     # masked image
-    img_masked = original_img * (1 - mask)
+    # 1 -- meaning masked
+    # 0 -- meaning keep
+
+    # keep the masked image
+    boolean_mask = (mask) == 1
+    img_masked = original_img.clone()
+    img_masked[boolean_mask] = np.nan
+
+    img_paste = pred_img.clone()
+
+    img_paste[~boolean_mask] = original_img[~boolean_mask]
+    # img_masked = original_img * (1 - mask)
     # reconstructed image pasted with visible patches
-    img_paste = original_img * (1 - mask) + pred_img * mask
+    # img_paste = original_img[] + pred_img * mask
 
-    # muptiply std and add mean to each image
-    original_img = recover_norm(original_img[0])
-    img_masked = recover_norm(img_masked[0])
-
-    pred_img = recover_norm(pred_img[0])
-    img_paste = recover_norm(img_paste[0])
+#     # muptiply std and add mean to each image
+#     original_img = recover_norm(original_img[0])
+#     img_masked = recover_norm(img_masked[0])
+# #
+#     pred_img = recover_norm(pred_img[0])
+#     img_paste = recover_norm(img_paste[0])
 
     return original_img, img_masked, pred_img, img_paste
+
+
+def convert_num_to_nan(tensor, ignore_index=255):
+    mask = (tensor == ignore_index)
+    # Replace values with NaN
+    tensor[mask] = float('nan')
+    return tensor
 
 
 def main():
@@ -131,13 +157,15 @@ def main():
     else:
         model.cfg.test_dataloader = dict(
             dataset=dict(pipeline=[
-                dict(type='LoadImageFromFile'),
-                dict(type='Resize', scale=(224, 224), backend='pillow'),
+                dict(type='LoadImageFromNetCDFFile', channels=[
+                     'nersc_sar_primary', 'nersc_sar_secondary']),
+                dict(type='Resize', scale=(224, 224), backend='cv2'),
                 dict(type='PackSelfSupInputs', meta_keys=['img_path'])
             ]))
-
     # get original image
     vis_pipeline = Compose(model.cfg.test_dataloader.dataset.pipeline)
+    from icecream import ic
+    # ic(vis_pipeline)
     data = dict(img_path=args.img_path)
     data = vis_pipeline(data)
     data = default_collate([data])
@@ -155,7 +183,9 @@ def main():
 
     # get reconstruction image
     features = inference_model(model, args.img_path)
-    results = model.reconstruct(features, mean=mean, std=std)
+    from icecream import ic
+    ic(features.shape)
+    results = model.reconstruct(features.cpu(), mean=mean, std=std)
 
     original_target = model.target if args.target_generator else img[0]
 
@@ -166,8 +196,15 @@ def main():
         mean=mean,
         std=std)
 
-    save_images(original_img, img_masked, pred_img, img_paste, args.out_file)
+    ic(original_img.shape)
+    ic(img_masked.shape)
+    ic(pred_img.shape)
+    ic(img_paste.shape)
+
+    save_images(convert_num_to_nan(original_img), convert_num_to_nan(
+        img_masked), convert_num_to_nan(pred_img), convert_num_to_nan(img_paste), args.out_file)
 
 
 if __name__ == '__main__':
-    main()
+    with torch.autograd.detect_anomaly(check_nan=True):
+        main()
