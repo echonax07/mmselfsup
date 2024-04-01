@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 from tqdm import tqdm
 import multiprocessing
 from functools import partial
+import torch
 
 
 @TRANSFORMS.register_module()
@@ -167,6 +168,7 @@ class PreLoadImageFromNetCDFFile(BaseTransform):
                  color_type='color',
                  imdecode_backend='cv2',
                  nan=255,
+                 downsample_factor=10,
                  ignore_empty=False):
         self.channels = channels
         self.mean = mean
@@ -176,6 +178,7 @@ class PreLoadImageFromNetCDFFile(BaseTransform):
         self.imdecode_backend = imdecode_backend
         self.ignore_empty = ignore_empty
         self.data_root = data_root
+        self.downsample_factor = downsample_factor
         self.nc_files = self.list_nc_files(data_root)
         # key represents full path of the image and value represents the np image loaded
         self.pre_loaded_image_dic = {}
@@ -188,38 +191,61 @@ class PreLoadImageFromNetCDFFile(BaseTransform):
             mean = np.array(self.mean)
             std = np.array(self.std)
             img = (img-mean)/std
-            if self.to_float32:
+            shape = img.shape
+            if self.downsample_factor != 1:
+                # downsample by taking max over a 10x10 block
+                # img = torch.from_numpy(np.expand_dims(img, 0))
+                img = torch.from_numpy(img)
+                img = img.unsqueeze(0).permute(0, 3, 1, 2)
+                img = torch.nn.functional.interpolate(img,
+                                                      size=(shape[0]//self.downsample_factor,
+                                                            shape[1]//self.downsample_factor),
+                                                      mode='nearest')
+                img = img.permute(0,2,3,1).squeeze(0)        
+                # Take the average over each 10x10 block
+                # img = img.mean(axis=(1, 3))
+                img = img.numpy()
+            if to_float32:
                 img = img.astype(np.float32)
             self.pre_loaded_image_dic[filename] = img
         ic('Finished loading all the images into memory...')
 
-    # not speeding up
-    def load_image(self, filename, channels, mean, std, to_float32):
-        xarr = xr.open_dataset(filename, engine='h5netcdf')
-        img = xarr[channels].to_array().data
-        img = np.transpose(img, (1, 2, 0))
-        mean = np.array(mean)
-        std = np.array(std)
-        img = (img - mean) / std
-        if to_float32:
-            img = img.astype(np.float32)
-        return filename, img
-    # not speeding up
+    # # not speeding up
+    # def load_image(self, filename, channels, mean, std, to_float32):
+    #     xarr = xr.open_dataset(filename, engine='h5netcdf')
+    #     img = xarr[channels].to_array().data
+    #     img = np.transpose(img, (1, 2, 0))
+    #     mean = np.array(mean)
+    #     std = np.array(std)
+    #     img = (img - mean) / std
+    #     shape = img.shape
+    #     ic(self.downsample_factor)
+    #     if self.downsample_factor != 1:
+    #         # downsample by taking max over a 10x10 block
+    #         img = img.reshape(shape[0], self.downsample_factor,
+    #                           shape[1], self.downsample_factor, shape[2])
+    #         # Take the average over each 10x10 block
+    #         img = img.mean(axis=(1, 3))
+    #         ic(img.shape)
+    #     if to_float32:
+    #         img = img.astype(np.float32)
+    #     return filename, img
+    # # not speeding up
 
-    def load_images_parallel(self, nc_files, channels, mean, std, to_float32):
-        pool = multiprocessing.Pool(processes=4)
-        func = partial(self.load_image, channels=channels,
-                       mean=mean, std=std, to_float32=to_float32)
+    # def load_images_parallel(self, nc_files, channels, mean, std, to_float32):
+    #     pool = multiprocessing.Pool(processes=4)
+    #     func = partial(self.load_image, channels=channels,
+    #                    mean=mean, std=std, to_float32=to_float32)
 
-        results = []
-        with tqdm(total=len(nc_files)) as pbar:
-            for result in pool.imap_unordered(func, nc_files):
-                results.append(result)
-                pbar.update()
+    #     results = []
+    #     with tqdm(total=len(nc_files)) as pbar:
+    #         for result in pool.imap_unordered(func, nc_files):
+    #             results.append(result)
+    #             pbar.update()
 
-        pool.close()
-        pool.join()
-        return dict(results)
+    #     pool.close()
+    #     pool.join()
+    #     return dict(results)
 
     def list_nc_files(self, folder_path):
         nc_files = []

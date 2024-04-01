@@ -16,7 +16,7 @@ train_pipeline = [
     #     std=[5.659745919326586, 4.746759336539111], to_float32=False, nan=255),
     dict(type='PreLoadImageFromNetCDFFile', data_root=data_root, channels=[
         'nersc_sar_primary', 'nersc_sar_secondary'], mean=[-14.508254953309349, -24.701211250236728],
-        std=[5.659745919326586, 4.746759336539111], to_float32=False, nan=255),
+        std=[5.659745919326586, 4.746759336539111], to_float32=False, nan=255, downsample_factor=10),
     dict(
         type='RandomResizedCrop',
         size=224,
