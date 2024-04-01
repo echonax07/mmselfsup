@@ -9,11 +9,14 @@ _base_ = [
 # custom dataset
 dataset_type = 'mmcls.CustomDataset'
 data_root = '/home/m32patel/projects/def-dclausi/AI4arctic/dataset/ai4arctic_raw_train_v3/'
+# data_root = '/home/m32patel/projects/def-dclausi/AI4arctic/dataset/ai4arctic_raw_test_v2/'
 train_pipeline = [
-    # dict(type='LoadImageFromNetCDFFile', channels = ['nersc_sar_primary','nersc_sar_secondary', 'sar_incidenceangle']),
-    dict(type='LoadImageFromNetCDFFile', channels=[
-        'nersc_sar_primary', 'nersc_sar_secondary'],mean=[-14.508254953309349, -24.701211250236728],
-        std=[5.659745919326586, 4.746759336539111],to_float32=False, nan=255),
+    # dict(type='LoadImageFromNetCDFFile', channels=[
+    #     'nersc_sar_primary', 'nersc_sar_secondary'], mean=[-14.508254953309349, -24.701211250236728],
+    #     std=[5.659745919326586, 4.746759336539111], to_float32=False, nan=255),
+    dict(type='PreLoadImageFromNetCDFFile', data_root=data_root, channels=[
+        'nersc_sar_primary', 'nersc_sar_secondary'], mean=[-14.508254953309349, -24.701211250236728],
+        std=[5.659745919326586, 4.746759336539111], to_float32=False, nan=255),
     dict(
         type='RandomResizedCrop',
         size=224,
@@ -28,8 +31,8 @@ train_pipeline = [
 vis_pipeline = [
     # dict(type='LoadImageFromNetCDFFile', channels = ['nersc_sar_primary','nersc_sar_secondary', 'sar_incidenceangle']),
     dict(type='LoadImageFromNetCDFFile', channels=[
-        'nersc_sar_primary', 'nersc_sar_secondary'],mean=[-14.508254953309349, -24.701211250236728],
-        std=[5.659745919326586, 4.746759336539111],to_float32=False, nan=255),
+        'nersc_sar_primary', 'nersc_sar_secondary'], mean=[-14.508254953309349, -24.701211250236728],
+        std=[5.659745919326586, 4.746759336539111], to_float32=False, nan=255),
     dict(
         type='RandomResizedCrop',
         size=224,
@@ -57,7 +60,7 @@ vis_pipeline = [
 
 train_dataloader = dict(
     # _delete_=True,
-    batch_size=64,
+    batch_size=128,
     num_workers=4,
     persistent_workers=True,
     sampler=dict(type='DefaultSampler', shuffle=True),
@@ -138,7 +141,7 @@ param_scheduler = [
 
 # runtime settings
 # pre-train for 400 epochs
-train_cfg = dict(max_epochs=400)
+train_cfg = dict(max_epochs=20)
 # runtime settings
 # train_cfg = dict(_delete_=True, type='IterBasedTrainLoop', max_iters=10)
 
@@ -157,8 +160,6 @@ visualizer = dict(
 
 visualizer = dict(
     vis_backends=vis_backends,)
-
-
 
 
 default_hooks = dict(

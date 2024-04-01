@@ -11,6 +11,7 @@ from tqdm import tqdm
 import multiprocessing
 from functools import partial
 
+
 @TRANSFORMS.register_module()
 class LoadImageFromNetCDFFile(BaseTransform):
     """Load an image from an xarray dataset.
@@ -189,8 +190,37 @@ class PreLoadImageFromNetCDFFile(BaseTransform):
             img = (img-mean)/std
             if self.to_float32:
                 img = img.astype(np.float32)
-            self.pre_loaded_image_dic[filename] = img      
+            self.pre_loaded_image_dic[filename] = img
         ic('Finished loading all the images into memory...')
+
+    # not speeding up
+    def load_image(self, filename, channels, mean, std, to_float32):
+        xarr = xr.open_dataset(filename, engine='h5netcdf')
+        img = xarr[channels].to_array().data
+        img = np.transpose(img, (1, 2, 0))
+        mean = np.array(mean)
+        std = np.array(std)
+        img = (img - mean) / std
+        if to_float32:
+            img = img.astype(np.float32)
+        return filename, img
+    # not speeding up
+
+    def load_images_parallel(self, nc_files, channels, mean, std, to_float32):
+        pool = multiprocessing.Pool(processes=4)
+        func = partial(self.load_image, channels=channels,
+                       mean=mean, std=std, to_float32=to_float32)
+
+        results = []
+        with tqdm(total=len(nc_files)) as pbar:
+            for result in pool.imap_unordered(func, nc_files):
+                results.append(result)
+                pbar.update()
+
+        pool.close()
+        pool.join()
+        return dict(results)
+
     def list_nc_files(self, folder_path):
         nc_files = []
         for root, dirs, files in os.walk(folder_path):
