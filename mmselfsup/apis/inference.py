@@ -13,6 +13,7 @@ from torch import nn
 from mmselfsup.models import build_algorithm
 from mmselfsup.structures import SelfSupDataSample
 
+from icecream import ic
 
 def init_model(config: Union[str, Config],
                checkpoint: Optional[str] = None,
@@ -72,11 +73,13 @@ def inference_model(model: nn.Module,
     # build the data pipeline
     test_pipeline_cfg = cfg.test_dataloader.dataset.pipeline
     if isinstance(img, str):
-        if test_pipeline_cfg[0]['type'] != 'LoadImageFromFile':
-            test_pipeline_cfg.insert(0, dict(type='LoadImageFromFile'))
+        if test_pipeline_cfg[0]['type'] !='LoadImageFromNetCDFFile':
+            ic("yes")
+            test_pipeline_cfg.insert(0, dict(type='LoadImageFromNetCDFFile', channels = ['nersc_sar_primary','nersc_sar_secondary', 'sar_incidenceangle']))
         data = dict(img_path=img)
     else:
-        if test_pipeline_cfg[0]['type'] == 'LoadImageFromFile':
+        ic("no")
+        if test_pipeline_cfg[0]['type'] == 'LoadImageFromNetCDFFile':
             test_pipeline_cfg.pop(0)
         data = dict(img=img)
     test_pipeline = Compose(test_pipeline_cfg)

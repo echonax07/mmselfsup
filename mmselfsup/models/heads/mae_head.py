@@ -11,6 +11,7 @@ class MAEPretrainHead(BaseModule):
 
     Args:
         loss (dict): Config of loss.
+        num_to_nan (num): Whether to convert num to nan or not
         norm_pix_loss (bool): Whether or not normalize target.
             Defaults to False.
         patch_size (int): Patch size. Defaults to 16.
@@ -38,9 +39,9 @@ class MAEPretrainHead(BaseModule):
         assert imgs.shape[2] == imgs.shape[3] and imgs.shape[2] % p == 0
 
         h = w = imgs.shape[2] // p
-        x = imgs.reshape(shape=(imgs.shape[0], 3, h, p, w, p))
+        x = imgs.reshape(shape=(imgs.shape[0], 2, h, p, w, p))
         x = torch.einsum('nchpwq->nhwpqc', x)
-        x = x.reshape(shape=(imgs.shape[0], h * w, p**2 * 3))
+        x = x.reshape(shape=(imgs.shape[0], h * w, p**2 * 2))
         return x
 
     def unpatchify(self, x: torch.Tensor) -> torch.Tensor:
@@ -55,9 +56,9 @@ class MAEPretrainHead(BaseModule):
         h = w = int(x.shape[1]**.5)
         assert h * w == x.shape[1]
 
-        x = x.reshape(shape=(x.shape[0], h, w, p, p, 3))
+        x = x.reshape(shape=(x.shape[0], h, w, p, p, 2))
         x = torch.einsum('nhwpqc->nchpwq', x)
-        imgs = x.reshape(shape=(x.shape[0], 3, h * p, h * p))
+        imgs = x.reshape(shape=(x.shape[0], 2, h * p, h * p))
         return imgs
 
     def construct_target(self, target: torch.Tensor) -> torch.Tensor:
@@ -71,14 +72,16 @@ class MAEPretrainHead(BaseModule):
 
         Returns:
             torch.Tensor: Tokenized images with the shape of B x L x C
-        """
+        # """
+        # if self.num_to_nan is not None:
+            # target[target==self.num_to_nan]=float('nan')
         target = self.patchify(target)
         if self.norm_pix:
             # normalize the target image
             mean = target.mean(dim=-1, keepdim=True)
             var = target.var(dim=-1, keepdim=True)
             target = (target - mean) / (var + 1.e-6)**.5
-
+        # target = torch.nan_to_num(target, nan=255)
         return target
 
     def forward(self, pred: torch.Tensor, target: torch.Tensor,

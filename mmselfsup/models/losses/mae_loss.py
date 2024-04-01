@@ -59,13 +59,14 @@ class MAEReconstructionLossWithIgnoreIndex(BaseModule):
         Returns:
             torch.Tensor: The reconstruction loss.
         """
-        non_255_mask = (target != self.ignore_index).any(dim=2).float()
+        non_255_mask = (target == self.ignore_index).any(dim=2)
+        non_255_mask = (~non_255_mask).float()
         # diff = input.squeeze(-1) - target
         # if (target == 255).any():
         #     print('found 255 target value')
         loss = (pred - target)**2
 
-        # mask = mask * non_255_mask
+        mask = mask * non_255_mask
 
         # if torch.isnan(pred).any():
         #     print('Found nan in pred')
