@@ -131,3 +131,5 @@ INFO
 
 # Pytorch
 *.pth
+# compute canada
+*.out
