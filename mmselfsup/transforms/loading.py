@@ -4,10 +4,12 @@ from mmcv.image import imread
 from mmcv.transforms import BaseTransform
 from mmcv.transforms.builder import TRANSFORMS
 from icecream import ic
-
+import os
 import numpy as np
 import matplotlib.pyplot as plt
-
+from tqdm import tqdm
+import multiprocessing
+from functools import partial
 
 @TRANSFORMS.register_module()
 class LoadImageFromNetCDFFile(BaseTransform):
@@ -58,6 +60,7 @@ class LoadImageFromNetCDFFile(BaseTransform):
             dict: The dict contains loaded image and meta information.
         """
         filename = results['img_path']
+        # ic(filename)
         try:
             xarr = xr.open_dataset(filename, engine='h5netcdf')
             image_data = []
@@ -114,6 +117,99 @@ class LoadImageFromNetCDFFile(BaseTransform):
             else:
                 raise e
 
+        if self.to_float32:
+            img = img.astype(np.float32)
+
+        results['img'] = img
+        results['img_shape'] = img.shape[:2]
+        results['ori_shape'] = img.shape[:2]
+        return results
+
+    def __repr__(self):
+        repr_str = (f'{self.__class__.__name__}('
+                    f'channels={self.channels}, '
+                    f'to_float32={self.to_float32}, '
+                    f"color_type='{self.color_type}', "
+                    f"imdecode_backend='{self.imdecode_backend}', "
+                    f'ignore_empty={self.ignore_empty})')
+        return repr_str
+
+
+@TRANSFORMS.register_module()
+class PreLoadImageFromNetCDFFile(BaseTransform):
+    """Load an image from an xarray dataset.
+
+    Required Keys:
+        - img_path
+
+    Modified Keys:
+        - img
+        - img_shape
+        - ori_shape
+
+    Args:
+        channels (list[str]): List of variable names to load as channels of the image.
+        to_float32 (bool): Whether to convert the loaded image to a float32 numpy array.
+            If set to False, the loaded image is a uint8 array. Defaults to False.
+        color_type (str): The flag argument for :func:`mmcv.imfrombytes`. Defaults to 'color'.
+        imdecode_backend (str): The image decoding backend type. Defaults to 'cv2'.
+        ignore_empty (bool): Whether to allow loading empty image or file path not existent.
+            Defaults to False.
+    """
+
+    def __init__(self,
+                 channels,
+                 data_root,
+                 mean=[-14.508254953309349, -24.701211250236728],
+                 std=[5.659745919326586, 4.746759336539111],
+                 to_float32=True,
+                 color_type='color',
+                 imdecode_backend='cv2',
+                 nan=255,
+                 ignore_empty=False):
+        self.channels = channels
+        self.mean = mean
+        self.std = std
+        self.to_float32 = to_float32
+        self.color_type = color_type
+        self.imdecode_backend = imdecode_backend
+        self.ignore_empty = ignore_empty
+        self.data_root = data_root
+        self.nc_files = self.list_nc_files(data_root)
+        # key represents full path of the image and value represents the np image loaded
+        self.pre_loaded_image_dic = {}
+        ic('Starting to load all the images into memory...')
+        for filename in tqdm(self.nc_files):
+            xarr = xr.open_dataset(filename, engine='h5netcdf')
+            img = xarr[self.channels].to_array().data
+            # reorder from (2, H, W) to (H, W, 2)
+            img = np.transpose(img, (1, 2, 0))
+            mean = np.array(self.mean)
+            std = np.array(self.std)
+            img = (img-mean)/std
+            if self.to_float32:
+                img = img.astype(np.float32)
+            self.pre_loaded_image_dic[filename] = img      
+        ic('Finished loading all the images into memory...')
+    def list_nc_files(self, folder_path):
+        nc_files = []
+        for root, dirs, files in os.walk(folder_path):
+            for file in files:
+                if file.endswith(".nc"):
+                    nc_files.append(os.path.join(root, file))
+        return nc_files
+
+    def transform(self, results):
+        """Functions to load image.
+
+        Args:
+            results (dict): Result dict from :class:`mmengine.dataset.BaseDataset`.
+
+        Returns:
+            dict: The dict contains loaded image and meta information.
+        """
+        filename = results['img_path']
+        img = self.pre_loaded_image_dic[filename]
         if self.to_float32:
             img = img.astype(np.float32)
 
