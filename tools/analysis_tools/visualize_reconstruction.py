@@ -155,7 +155,7 @@ def main():
 
     # get reconstruction image
     features = inference_model(model, args.img_path)
-    results = model.reconstruct(features, mean=mean, std=std)
+    results = model.reconstruct(features.cpu(), mean=mean, std=std)
 
     original_target = model.target if args.target_generator else img[0]
 

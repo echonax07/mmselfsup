@@ -50,7 +50,11 @@ class MAE(BaseModel):
         """
         mean = kwargs['mean']
         std = kwargs['std']
-        features = features * std + mean
+        from icecream import ic
+        ic(features.shape)
+        ic(mean.shape)
+        ic(std.shape)
+        features = features * std.to(features.device) + mean.to(features.device)
 
         pred = self.head.unpatchify(features)
         pred = torch.einsum('nchw->nhwc', pred).detach().cpu()
