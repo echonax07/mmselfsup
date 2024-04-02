@@ -8,18 +8,18 @@ _base_ = [
 
 # custom dataset
 dataset_type = 'mmcls.CustomDataset'
-data_root = '/home/m32patel/projects/def-dclausi/AI4arctic/dataset/ai4arctic_raw_train_v3/'
-# data_root = '/home/m32patel/projects/def-dclausi/AI4arctic/dataset/ai4arctic_raw_test_v2/'
+# data_root = '/home/m32patel/projects/def-dclausi/AI4arctic/dataset/ai4arctic_raw_train_v3/'
+data_root = '/home/m32patel/projects/def-dclausi/AI4arctic/dataset/test1file/'
 train_pipeline = [
     # dict(type='LoadImageFromNetCDFFile', channels=[
     #     'nersc_sar_primary', 'nersc_sar_secondary'], mean=[-14.508254953309349, -24.701211250236728],
     #     std=[5.659745919326586, 4.746759336539111], to_float32=False, nan=255),
     dict(type='PreLoadImageFromNetCDFFile', data_root=data_root, channels=[
         'nersc_sar_primary', 'nersc_sar_secondary'], mean=[-14.508254953309349, -24.701211250236728],
-        std=[5.659745919326586, 4.746759336539111], to_float32=True, nan=255, downsample_factor=10),
+        std=[5.659745919326586, 4.746759336539111], to_float32=True, nan=255, downsample_factor=5),
     dict(
         type='RandomResizedCrop',
-        size=224,
+        size=512,
         scale=(0.2, 1.0),
         backend='cv2',
         interpolation='bicubic'),
@@ -35,7 +35,7 @@ vis_pipeline = [
         std=[5.659745919326586, 4.746759336539111], to_float32=False, nan=255),
     dict(
         type='RandomResizedCrop',
-        size=224,
+        size=512,
         scale=(0.2, 1.0),
         backend='cv2',
         interpolation='bicubic'),
@@ -60,7 +60,7 @@ vis_pipeline = [
 
 train_dataloader = dict(
     # _delete_=True,
-    batch_size=64,
+    batch_size=32,
     num_workers=4,
     persistent_workers=True,
     sampler=dict(type='DefaultSampler', shuffle=True),
@@ -84,9 +84,10 @@ model = dict(
         std=[1, 1],
         bgr_to_rgb=False),
     backbone=dict(type='MAEViT', arch='b', patch_size=16,
-                  mask_ratio=0.75, in_chans=2),
+                  mask_ratio=0.75, in_chans=2, img_size=512),
     neck=dict(
         type='MAEPretrainDecoder',
+        num_patches=1024,
         patch_size=16,
         in_chans=2,
         embed_dim=768,
@@ -141,7 +142,7 @@ param_scheduler = [
 
 # runtime settings
 # pre-train for 400 epochs
-train_cfg = dict(max_epochs=20)
+train_cfg = dict(max_epochs=400)
 # runtime settings
 # train_cfg = dict(_delete_=True, type='IterBasedTrainLoop', max_iters=10)
 

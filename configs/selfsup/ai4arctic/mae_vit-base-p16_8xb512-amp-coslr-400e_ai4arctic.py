@@ -141,7 +141,7 @@ param_scheduler = [
 
 # runtime settings
 # pre-train for 400 epochs
-train_cfg = dict(max_epochs=20)
+train_cfg = dict(max_epochs=400)
 # runtime settings
 # train_cfg = dict(_delete_=True, type='IterBasedTrainLoop', max_iters=10)
 
