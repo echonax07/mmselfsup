@@ -84,7 +84,7 @@ model = dict(
         std=[1, 1],
         bgr_to_rgb=False),
     backbone=dict(type='MAEViT', arch='b', patch_size=16,
-                  mask_ratio=0.50, in_chans=2, img_size=512),
+                  mask_ratio=0.75, in_chans=2, img_size=512),
     neck=dict(
         type='MAEPretrainDecoder',
         num_patches=1024,
@@ -98,7 +98,7 @@ model = dict(
     ),
     head=dict(
         type='MAEPretrainHead',
-        norm_pix=False,
+        norm_pix=True,
         patch_size=16,
         loss=dict(type='MAEReconstructionLossWithIgnoreIndex')),
     init_cfg=[
@@ -109,7 +109,7 @@ model = dict(
 
 # optimizer wrapper
 optimizer = dict(
-    type='AdamW', lr=1.5e-4 * 1, betas=(0.9, 0.95), weight_decay=0.05)
+    type='AdamW', lr=1.5e-4 * 4096 / 256, betas=(0.9, 0.95), weight_decay=0.05)
 optim_wrapper = dict(
     type='OptimWrapper',
     optimizer=optimizer,
@@ -164,9 +164,9 @@ visualizer = dict(
 
 
 default_hooks = dict(
-    logger=dict(type='LoggerHook', interval=100),
+    logger=dict(type='LoggerHook', interval=1),
     # only keeps the latest 3 checkpoints
-    checkpoint=dict(type='CheckpointHook', interval=200, max_keep_ckpts=3))
+    checkpoint=dict(type='CheckpointHook', interval=100, max_keep_ckpts=3))
 
 
 custom_imports = dict(
@@ -177,7 +177,7 @@ custom_imports = dict(
 
 # randomness
 randomness = dict(seed=0, diff_rank_seed=True)
-resume = False
+resume = True
 
 
 # python tools/analysis_tools/visualize_reconstruction.py "configs/selfsup/ai4arctic/mae_vit-base-p16_8xb512-amp-coslr-300e_ai4arctic_copy.py" --checkpoint "work_dirs/selfsup/mae_vit-base-p16_8xb512-amp-coslr-300e_ai4arctic_copy/epoch_1.pth" --img-path "/home/m32patel/projects/def-dclausi/AI4arctic/dataset/train/20211220T205630_dmi_prep.nc" --out-file "work_dirs/selfsup/20211220T205630_dmi_prep"
