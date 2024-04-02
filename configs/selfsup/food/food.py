@@ -40,6 +40,35 @@ train_dataloader = dict(
         pipeline=train_pipeline))
 
 
+# model settings
+model = dict(
+    type='MAE',
+    data_preprocessor=dict(
+        mean=[123.675, 116.28, 103.53],
+        std=[58.395, 57.12, 57.375],
+        bgr_to_rgb=True),
+    backbone=dict(type='MAEViT', arch='b', patch_size=16, mask_ratio=0.75),
+    neck=dict(
+        type='MAEPretrainDecoder',
+        patch_size=16,
+        in_chans=3,
+        embed_dim=768,
+        decoder_embed_dim=512,
+        decoder_depth=8,
+        decoder_num_heads=16,
+        mlp_ratio=4.,
+    ),
+    head=dict(
+        type='MAEPretrainHead',
+        norm_pix=False,
+        patch_size=16,
+        loss=dict(type='MAEReconstructionLoss')),
+    init_cfg=[
+        dict(type='Xavier', distribution='uniform', layer='Linear'),
+        dict(type='Constant', layer='LayerNorm', val=1.0, bias=0.0)
+    ])
+
+
 # optimizer wrapper
 optimizer = dict(
     type='AdamW', lr=1.5e-4 * 4096 / 256, betas=(0.9, 0.95), weight_decay=0.05)
@@ -83,4 +112,4 @@ default_hooks = dict(
 
 # randomness
 randomness = dict(seed=0, diff_rank_seed=True)
-resume = True
+resume = False

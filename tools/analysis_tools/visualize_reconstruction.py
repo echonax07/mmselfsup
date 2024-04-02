@@ -146,16 +146,21 @@ def main():
     if args.norm_pix:
         # for MAE reconstruction
         img_embedding = model.head.patchify(img[0])
+        from icecream import ic
+        ic(img_embedding.shape)
         # normalize the target image
         mean = img_embedding.mean(dim=-1, keepdim=True)
         std = (img_embedding.var(dim=-1, keepdim=True) + 1.e-6)**.5
+        ic(mean.shape)
+        ic(mean.mean())
+        ic(std.mean())
     else:
         mean = imagenet_mean
         std = imagenet_std
 
     # get reconstruction image
     features = inference_model(model, args.img_path)
-    results = model.reconstruct(features.cpu(), mean=mean, std=std)
+    results = model.reconstruct(features.cpu(), norm_pix=args.norm_pix, mean=mean, std=std)
 
     original_target = model.target if args.target_generator else img[0]
 

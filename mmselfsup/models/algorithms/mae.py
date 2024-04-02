@@ -36,6 +36,7 @@ class MAE(BaseModel):
 
     def reconstruct(self,
                     features: torch.Tensor,
+                    norm_pix:bool = False,
                     data_samples: Optional[List[SelfSupDataSample]] = None,
                     **kwargs) -> SelfSupDataSample:
         """The function is for image reconstruction.
@@ -54,7 +55,8 @@ class MAE(BaseModel):
         ic(features.shape)
         ic(mean.shape)
         ic(std.shape)
-        features = features * std.to(features.device) + mean.to(features.device)
+        if norm_pix:
+            features = features * std.to(features.device) + mean.to(features.device)
 
         pred = self.head.unpatchify(features)
         pred = torch.einsum('nchw->nhwc', pred).detach().cpu()
