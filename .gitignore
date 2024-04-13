@@ -133,3 +133,5 @@ INFO
 *.pth
 # compute canada
 *.out
+compute_canada/submit/wandb/settings
+wandb/settings

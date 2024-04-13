@@ -7,6 +7,7 @@ _base_ = [
 ]
 
 # custom dataset
+dataset_type = 'mmcls.CustomDataset'
 data_root = '/home/m32patel/projects/def-dclausi/AI4arctic/dataset/ai4arctic_raw_train_v3/'
 # data_root = '/home/m32patel/projects/def-dclausi/AI4arctic/dataset/ai4arctic_raw_test_v2/'
 train_pipeline = [
@@ -140,7 +141,7 @@ param_scheduler = [
 
 # runtime settings
 # pre-train for 400 epochs
-train_cfg = dict(max_epochs=20)
+train_cfg = dict(max_epochs=400)
 # runtime settings
 # train_cfg = dict(_delete_=True, type='IterBasedTrainLoop', max_iters=10)
 

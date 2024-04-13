@@ -36,7 +36,7 @@ srun --ntasks=2 --gres=gpu:2  --kill-on-bad-exit=1 --cpus-per-task=6 python tool
 
 # Extract the base name without extension
 base_name=$(basename "$1" .py)
-CHECKPOINT=$(cat work_dirs/$base_name/last_checkpoint)
+CHECKPOINT=$(cat work_dirs/selfsup/$base_name/last_checkpoint)
 echo "$CHECKPOINT"
 
-python tools/analysis_tools/visualize_reconstruction.py $1  --use-vis-pipeline --checkpoint $CHECKPOINT --img-path "/home/m32patel/projects/def-y2863che/ai4arctic/dataset/ai4arctic_raw_train_v3/S1B_EW_GRDM_1SDH_20211119T080313_20211119T080413_029654_0389FB_9317_icechart_dmi_202111190805_CentralEast_RIC.nc"  --out-file "work_dirs/$base_name/20211117T212054"
+python tools/analysis_tools/visualize_reconstruction.py $1  --use-vis-pipeline --checkpoint $CHECKPOINT --img-path "/home/m32patel/projects/def-dclausi/AI4arctic/dataset/ai4arctic_raw_train_v3/S1B_EW_GRDM_1SDH_20211119T080313_20211119T080413_029654_0389FB_9317_icechart_dmi_202111190805_CentralEast_RIC.nc"  --out-file "work_dirs/selfsup/$base_name/20211117T212054"

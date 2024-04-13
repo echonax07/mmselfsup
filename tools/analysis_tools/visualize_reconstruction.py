@@ -24,10 +24,10 @@ def save_images(original_img: torch.Tensor, img_masked: torch.Tensor,
     # Create a new figure and four axes
     fig, axes = plt.subplots(2, 4, figsize=(16, 4))
     
-    original_img = recover_norm(original_img)
-    img_masked = recover_norm(img_masked)
-    pred_img = recover_norm(pred_img)
-    img_paste = recover_norm(img_paste)
+    # original_img = recover_norm(original_img)
+    # img_masked = recover_norm(img_masked)
+    # pred_img = recover_norm(pred_img)
+    # img_paste = recover_norm(img_paste)
 
     # Plot HH image and add colorbars
     plot_with_colorbar(fig, original_img[0, :, :, 0], axes[0, 0], 'original')
@@ -175,8 +175,13 @@ def main():
         # for MAE reconstruction
         img_embedding = model.head.patchify(img[0])
         # normalize the target image
+        ic(img_embedding.shape)
         mean = img_embedding.mean(dim=-1, keepdim=True)
         std = (img_embedding.var(dim=-1, keepdim=True) + 1.e-6)**.5
+        ic(mean.shape)
+        ic(mean.mean())
+        ic(std.mean())
+
     else:
         mean = imagenet_mean
         std = imagenet_std
@@ -185,8 +190,7 @@ def main():
     features = inference_model(model, args.img_path)
     from icecream import ic
     ic(features.shape)
-    results = model.reconstruct(features.cpu(), mean=mean, std=std)
-
+    results = model.reconstruct(features.cpu(), norm_pix = args.norm_pix ,mean=mean, std=std)
     original_target = model.target if args.target_generator else img[0]
 
     original_img, img_masked, pred_img, img_paste = post_process(
@@ -206,5 +210,4 @@ def main():
 
 
 if __name__ == '__main__':
-    with torch.autograd.detect_anomaly(check_nan=True):
-        main()
+    main()

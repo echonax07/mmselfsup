@@ -1,7 +1,9 @@
 #!/bin/bash 
 set -e
 array=( 
-configs/selfsup/ai4arctic/mae_vit-base-p16_8xb512-amp-coslr-300e_ai4arctic.py
+# configs/selfsup/ai4arctic/mae_vit-base-p16_8xb512-amp-coslr-300e_ai4arctic.py
+configs/selfsup/ai4arctic/mae_vit-base-p16_8xb512-amp-coslr-400e_ai4arctic.py
+
 )
 
 for i in "${!array[@]}"; do
