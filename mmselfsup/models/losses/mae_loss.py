@@ -48,24 +48,25 @@ class MAEReconstructionLossWithIgnoreIndex(BaseModule):
         self.ignore_index = ignore_index
 
     def forward(self, pred: torch.Tensor, target: torch.Tensor,
-                mask: torch.Tensor) -> torch.Tensor:
+                mask: torch.Tensor, non_255_mask:torch.Tensor) -> torch.Tensor:
         """Forward function of MAE Loss.
 
         Args:
             pred (torch.Tensor): The reconstructed image.
             target (torch.Tensor): The target image.
             mask (torch.Tensor): The mask of the target image.
+            non_255_mask (torch.Tensor): The non_255 mask which indicates which token doesn't contain 255 value
 
         Returns:
             torch.Tensor: The reconstruction loss.
         """
-        non_255_mask = (target == self.ignore_index).any(dim=2)
-        non_255_mask = (~non_255_mask).float()
+        # non_255_mask = (target == self.ignore_index).any(dim=2)
+        # non_255_mask = (~non_255_mask).float()
         # diff = input.squeeze(-1) - target
         # if (target == 255).any():
         #     print('found 255 target value')
         loss = (pred - target)**2
-
+        # Intersection between mask and non_255_mask
         mask = mask * non_255_mask
 
         # if torch.isnan(pred).any():

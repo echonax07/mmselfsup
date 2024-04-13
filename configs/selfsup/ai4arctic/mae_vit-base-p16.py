@@ -10,19 +10,19 @@ _base_ = [
 dataset_type = 'mmpretrain.CustomDataset'
 # data_root = '/home/m32patel/projects/def-dclausi/AI4arctic/dataset/ai4arctic_raw_train_v3/'
 data_root = '/home/m32patel/projects/def-dclausi/AI4arctic/dataset/test1file/'
+pretrain_ann_file = '/home/m32patel/projects/def-dclausi/AI4arctic/dataset/test1file/finetune_2.txt'
 train_pipeline = [
     # dict(type='LoadImageFromNetCDFFile', channels=[
     #     'nersc_sar_primary', 'nersc_sar_secondary'], mean=[-14.508254953309349, -24.701211250236728],
     #     std=[5.659745919326586, 4.746759336539111], to_float32=False, nan=255),
-    dict(type='PreLoadImageFromNetCDFFile', data_root=data_root, channels=[
+    dict(type='PreLoadImageFromNetCDFFile', data_root=data_root, ann_file = pretrain_ann_file, channels=[
         'nersc_sar_primary', 'nersc_sar_secondary'], mean=[-14.508254953309349, -24.701211250236728],
         std=[5.659745919326586, 4.746759336539111], to_float32=True, nan=255, downsample_factor=5),
     dict(
-        type='RandomResizedCrop',
-        size=512,
-        scale=(0.2, 1.0),
-        backend='cv2',
-        interpolation='bicubic'),
+        type='mmpretrain.RandomCrop',
+        crop_size=512,
+        pad_val = 255),
+    # dict(type='CenterCrop', crop_size=512),
     dict(type='RandomFlip', prob=0.5),
     dict(type='NantoNum', nan=255),
     dict(type='PackSelfSupInputs', meta_keys=['img_path'])
@@ -33,12 +33,11 @@ vis_pipeline = [
     dict(type='LoadImageFromNetCDFFile', channels=[
         'nersc_sar_primary', 'nersc_sar_secondary'], mean=[-14.508254953309349, -24.701211250236728],
         std=[5.659745919326586, 4.746759336539111], to_float32=True, nan=255),
-    dict(
-        type='RandomResizedCrop',
-        size=512,
-        scale=(0.2, 1.0),
-        backend='cv2',
-        interpolation='bicubic'),
+    #    dict(
+    #         type='mmpretrain.RandomCrop',
+    #         crop_size=512,
+    #         pad_val = 255),
+    dict(type='CenterCrop', crop_size=512),
     dict(type='RandomFlip', prob=0.5),
     dict(type='NantoNum', nan=255),
     dict(type='PackSelfSupInputs', meta_keys=['img_path'])
@@ -68,6 +67,7 @@ train_dataloader = dict(
     dataset=dict(
         type='mmpretrain.CustomDataset',
         with_label=False,
+        ann_file = '/home/m32patel/projects/def-dclausi/AI4arctic/dataset/test1file/finetune_2.txt',
         # data_root='../../dataset/train',
         data_root=data_root,
         pipeline=train_pipeline,
@@ -142,32 +142,29 @@ param_scheduler = [
 
 # runtime settings
 # pre-train for 400 epochs
-train_cfg = dict(max_epochs=400)
+train_cfg = dict(max_epochs=200)
 # runtime settings
 # train_cfg = dict(_delete_=True, type='IterBasedTrainLoop', max_iters=10)
 
 vis_backends = [dict(type='WandbVisBackend',
                      init_kwargs=dict(
-                         entity='ai4arctic',
-                         project='MAE',
+                         entity='mmwhale',
+                         project='mmsegmentation2',
                          name='{{fileBasenameNoExtension}}',),
+                     #  name='filename',),
                      define_metric_cfg=None,
                      commit=True,
                      log_code_name=None,
-                     watch_kwargs=None), ]
+                     watch_kwargs=None),
+                dict(type='LocalVisBackend')]
 
 visualizer = dict(
-    vis_backends=[dict(type='LocalVisBackend'), dict(type='WandbVisBackend')])
-
-visualizer = dict(
-    vis_backends=vis_backends,)
-
+    vis_backends=vis_backends)
 
 default_hooks = dict(
     logger=dict(type='LoggerHook', interval=100),
     # only keeps the latest 3 checkpoints
     checkpoint=dict(type='CheckpointHook', interval=200, max_keep_ckpts=3))
-
 
 custom_imports = dict(
     imports=['mmselfsup.transforms.loading',

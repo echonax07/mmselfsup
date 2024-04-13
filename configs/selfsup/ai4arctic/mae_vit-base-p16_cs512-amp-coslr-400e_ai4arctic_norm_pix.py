@@ -17,12 +17,11 @@ train_pipeline = [
     dict(type='PreLoadImageFromNetCDFFile', data_root=data_root, channels=[
         'nersc_sar_primary', 'nersc_sar_secondary'], mean=[-14.508254953309349, -24.701211250236728],
         std=[5.659745919326586, 4.746759336539111], to_float32=True, nan=255, downsample_factor=5),
-    dict(
-        type='RandomResizedCrop',
-        size=512,
-        scale=(0.2, 1.0),
-        backend='cv2',
-        interpolation='bicubic'),
+    # dict(
+    #     type='mmpretrain.RandomCrop',
+    #     crop_size=512,
+    #     pad_val = 255),
+    dict(type='CenterCrop', crop_size=512),
     dict(type='RandomFlip', prob=0.5),
     dict(type='NantoNum', nan=255),
     dict(type='PackSelfSupInputs', meta_keys=['img_path'])
@@ -33,12 +32,11 @@ vis_pipeline = [
     dict(type='LoadImageFromNetCDFFile', channels=[
         'nersc_sar_primary', 'nersc_sar_secondary'], mean=[-14.508254953309349, -24.701211250236728],
         std=[5.659745919326586, 4.746759336539111], to_float32=True, nan=255),
-    dict(
-        type='RandomResizedCrop',
-        size=512,
-        scale=(0.2, 1.0),
-        backend='cv2',
-        interpolation='bicubic'),
+#    dict(
+#         type='mmpretrain.RandomCrop',
+#         crop_size=512,
+#         pad_val = 255),
+    dict(type='CenterCrop', crop_size=512),
     dict(type='RandomFlip', prob=0.5),
     dict(type='NantoNum', nan=255),
     dict(type='PackSelfSupInputs', meta_keys=['img_path'])
@@ -98,7 +96,7 @@ model = dict(
     ),
     head=dict(
         type='MAEPretrainHead',
-        norm_pix=True,
+        norm_pix=False,
         patch_size=16,
         loss=dict(type='MAEReconstructionLossWithIgnoreIndex')),
     init_cfg=[
@@ -109,7 +107,7 @@ model = dict(
 
 # optimizer wrapper
 optimizer = dict(
-    type='AdamW', lr=1.5e-4 * 4096 / 256, betas=(0.9, 0.95), weight_decay=0.05)
+    type='AdamW', lr=1.5e-4 * 1, betas=(0.9, 0.95), weight_decay=0.05)
 optim_wrapper = dict(
     type='OptimWrapper',
     optimizer=optimizer,
@@ -164,10 +162,9 @@ visualizer = dict(
 
 
 default_hooks = dict(
-    logger=dict(type='LoggerHook', interval=1),
+    logger=dict(type='LoggerHook', interval=100),
     # only keeps the latest 3 checkpoints
-    checkpoint=dict(type='CheckpointHook', interval=100, max_keep_ckpts=3))
-
+    checkpoint=dict(type='CheckpointHook', interval=200, max_keep_ckpts=3))
 
 custom_imports = dict(
     imports=['mmselfsup.transforms.loading',
@@ -177,7 +174,7 @@ custom_imports = dict(
 
 # randomness
 randomness = dict(seed=0, diff_rank_seed=True)
-resume = True
+resume = False
 
 
 # python tools/analysis_tools/visualize_reconstruction.py "configs/selfsup/ai4arctic/mae_vit-base-p16_8xb512-amp-coslr-300e_ai4arctic_copy.py" --checkpoint "work_dirs/selfsup/mae_vit-base-p16_8xb512-amp-coslr-300e_ai4arctic_copy/epoch_1.pth" --img-path "/home/m32patel/projects/def-dclausi/AI4arctic/dataset/train/20211220T205630_dmi_prep.nc" --out-file "work_dirs/selfsup/20211220T205630_dmi_prep"

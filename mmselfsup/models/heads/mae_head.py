@@ -20,10 +20,12 @@ class MAEPretrainHead(BaseModule):
     def __init__(self,
                  loss: dict,
                  norm_pix: bool = False,
-                 patch_size: int = 16) -> None:
+                 patch_size: int = 16,
+                 ignore_index=255) -> None:
         super().__init__()
         self.norm_pix = norm_pix
         self.patch_size = patch_size
+        self.ignore_index = ignore_index
         self.loss = MODELS.build(loss)
 
     def patchify(self, imgs: torch.Tensor) -> torch.Tensor:
@@ -76,13 +78,20 @@ class MAEPretrainHead(BaseModule):
         # if self.num_to_nan is not None:
             # target[target==self.num_to_nan]=float('nan')
         target = self.patchify(target)
+        non_255_mask = (target == self.ignore_index).any(dim=2)
+        non_255_mask = (~non_255_mask).float()
         if self.norm_pix:
             # normalize the target image
             mean = target.mean(dim=-1, keepdim=True)
             var = target.var(dim=-1, keepdim=True)
             target = (target - mean) / (var + 1.e-6)**.5
+            # from icecream import ic
+            # ic(mean.shape)
+            # ic(mean.mean())
+            # ic(var.mean())
+
         # target = torch.nan_to_num(target, nan=255)
-        return target
+        return target, non_255_mask
 
     def forward(self, pred: torch.Tensor, target: torch.Tensor,
                 mask: torch.Tensor) -> torch.Tensor:
@@ -96,7 +105,7 @@ class MAEPretrainHead(BaseModule):
         Returns:
             torch.Tensor: The reconstruction loss.
         """
-        target = self.construct_target(target)
-        loss = self.loss(pred, target, mask)
+        target, non_255_mask  = self.construct_target(target)
+        loss = self.loss(pred, target, mask, non_255_mask)
 
         return loss
