@@ -42,6 +42,7 @@ class LoadImageFromNetCDFFile(BaseTransform):
                  to_float32=True,
                  color_type='color',
                  imdecode_backend='cv2',
+                 downsample_factor=10,
                  nan=255,
                  ignore_empty=False):
         self.channels = channels
@@ -51,7 +52,7 @@ class LoadImageFromNetCDFFile(BaseTransform):
         self.color_type = color_type
         self.imdecode_backend = imdecode_backend
         self.ignore_empty = ignore_empty
-
+        self.downsample_factor = downsample_factor
     def transform(self, results):
         """Functions to load image.
 
@@ -79,8 +80,19 @@ class LoadImageFromNetCDFFile(BaseTransform):
             img = np.stack(image_data, axis=-1)
             mean = np.array(self.mean)
             std = np.array(self.std)
-            b = np.stack(image_data, axis=-1)
             img = (img-mean)/std
+            shape = img.shape
+            if self.downsample_factor != 1:
+                img = torch.from_numpy(img)
+                img = img.unsqueeze(0).permute(0, 3, 1, 2)
+                img = torch.nn.functional.interpolate(img,
+                                                      size=(shape[0]//self.downsample_factor,
+                                                            shape[1]//self.downsample_factor),
+                                                      mode='nearest')
+                img = img.permute(0,2,3,1).squeeze(0)        
+                # Take the average over each 10x10 block
+                # img = img.mean(axis=(1, 3))
+                img = img.numpy()
             # img = np.nan_to_num(img, nan=255)
 
             # # Plot the data
