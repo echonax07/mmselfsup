@@ -1,15 +1,14 @@
 # AI4arctic readme
 
-This repo is built on top of [MMSelfsup](MMSelfsup), a self-supervised representation learning toolbox based on PyTorch. This repo is particularly useful for building foundation models as all the known methods are implemented. However the REPO is designed for General computer vision task and  not for remote sensing or other data. This repo contains the code to use Remote sensing data for self supervised pretraining. 
+This repo is built on top of [MMSelfsup](https://github.com/open-mmlab/mmselfsup), a self-supervised representation learning toolbox based on PyTorch. This repo is particularly useful for building foundation models as all the known methods are implemented. However the REPO is designed for General computer vision task and  not for remote sensing or other data. This repo contains the code to use Remote sensing data for self supervised pretraining. 
+
+For Finetuning tasks, please use the [sea-ice-mmseg](https://github.com/Fernando961226/sea-ice-mmseg) which is specially adapted for segmentation tasks.
 
 #### Key enhancements
 
 - Add a dataloader for loading images from NetCDF(.nc) file 
 - Support the MAE architecture to allow variable number of input channels contrast to RGB data with only 3 channels
 - MAE Reconstruction visualization: Plot each channel individually as opposed to RGB channels
-
-
-This repository builds on [MMSelfsup](MMSelfsup), a self-supervised representation learning toolbox based on PyTorch. While MMSelfsup is designed for general computer vision tasks, this repository extends its functionality to support remote sensing data. It includes code for self-supervised pretraining specifically tailored for remote sensing applications.
 
 
 ## Getting Started:
