@@ -13,7 +13,7 @@ downsample_factor = 5
 dataset_type = 'mmpretrain.CustomDataset'
 # data_root = '/home/m32patel/projects/def-dclausi/AI4arctic/dataset/ai4arctic_raw_train_v3/'
 data_root = '/home/m32patel/projects/rrg-dclausi/ai4arctic/dataset/ai4arctic_raw_train_v3'
-pretrain_ann_file = '/home/m32patel/projects/rrg-dclausi/ai4arctic/dataset/ai4arctic_raw_train_v3/pretrain_80.txt'
+pretrain_ann_file = '/home/m32patel/projects/rrg-dclausi/ai4arctic/dataset/ai4arctic_raw_train_v3/pretrain_50.txt'
 # pretrain_ann_file = '/home/m32patel/projects/rrg-dclausi/ai4arctic/dataset/ai4arctic_raw_train_v3/test1file.txt'
 train_pipeline = [
     # dict(type='LoadImageFromNetCDFFile', channels=[

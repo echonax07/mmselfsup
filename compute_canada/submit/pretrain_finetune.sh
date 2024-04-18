@@ -6,7 +6,7 @@
 #SBATCH --mem=200G
 #SBATCH --time=17:59:00
 #SBATCH --output=../output/%j.out
-#SBATCH --account=def-y2863che
+#SBATCH --account=def-l44xu-ab
 #SBATCH --mail-user=muhammed.computecanada@gmail.com
 #SBATCH --mail-type=BEGIN
 #SBATCH --mail-type=END

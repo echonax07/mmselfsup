@@ -43,10 +43,8 @@ vis_pipeline = [
     #         type='mmpretrain.RandomCrop',
     #         crop_size=512,
     #         pad_val = 255),
-    # dict(type='CenterCrop', crop_size=crop_size),
-    dict(type='Resize', scale=(512,512)),
-    # dict(type='Pad', size=(2000,2000),pad_val = 255),
-    # dict(type='RandomFlip', prob=0.5),
+    dict(type='CenterCrop', crop_size=crop_size),
+    dict(type='RandomFlip', prob=0.5),
     dict(type='NantoNum', nan=255),
     dict(type='PackSelfSupInputs', meta_keys=['img_path'])
 ]
@@ -92,7 +90,7 @@ model = dict(
         std=[1, 1],
         bgr_to_rgb=False),
     backbone=dict(type='MAEViT', arch='b', patch_size=16,
-                  mask_ratio=0.75, in_chans=2, img_size=512),
+                  mask_ratio=0.5, in_chans=2, img_size=512),
     neck=dict(
         type='MAEPretrainDecoder',
         num_patches=1024,

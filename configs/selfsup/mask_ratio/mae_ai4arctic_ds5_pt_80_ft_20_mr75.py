@@ -43,10 +43,8 @@ vis_pipeline = [
     #         type='mmpretrain.RandomCrop',
     #         crop_size=512,
     #         pad_val = 255),
-    # dict(type='CenterCrop', crop_size=crop_size),
-    dict(type='Resize', scale=(512,512)),
-    # dict(type='Pad', size=(2000,2000),pad_val = 255),
-    # dict(type='RandomFlip', prob=0.5),
+    dict(type='CenterCrop', crop_size=crop_size),
+    dict(type='RandomFlip', prob=0.5),
     dict(type='NantoNum', nan=255),
     dict(type='PackSelfSupInputs', meta_keys=['img_path'])
 ]

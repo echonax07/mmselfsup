@@ -13,7 +13,7 @@ downsample_factor = 5
 dataset_type = 'mmpretrain.CustomDataset'
 # data_root = '/home/m32patel/projects/def-dclausi/AI4arctic/dataset/ai4arctic_raw_train_v3/'
 data_root = '/home/m32patel/projects/rrg-dclausi/ai4arctic/dataset/ai4arctic_raw_train_v3'
-pretrain_ann_file = '/home/m32patel/projects/rrg-dclausi/ai4arctic/dataset/ai4arctic_raw_train_v3/pretrain_80.txt'
+pretrain_ann_file = '/home/m32patel/projects/rrg-dclausi/ai4arctic/dataset/ai4arctic_raw_train_v3/pretrain_95.txt'
 # pretrain_ann_file = '/home/m32patel/projects/rrg-dclausi/ai4arctic/dataset/ai4arctic_raw_train_v3/test1file.txt'
 train_pipeline = [
     # dict(type='LoadImageFromNetCDFFile', channels=[
@@ -43,10 +43,8 @@ vis_pipeline = [
     #         type='mmpretrain.RandomCrop',
     #         crop_size=512,
     #         pad_val = 255),
-    # dict(type='CenterCrop', crop_size=crop_size),
-    dict(type='Resize', scale=(512,512)),
-    # dict(type='Pad', size=(2000,2000),pad_val = 255),
-    # dict(type='RandomFlip', prob=0.5),
+    dict(type='CenterCrop', crop_size=crop_size),
+    dict(type='RandomFlip', prob=0.5),
     dict(type='NantoNum', nan=255),
     dict(type='PackSelfSupInputs', meta_keys=['img_path'])
 ]
