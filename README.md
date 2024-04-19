@@ -71,4 +71,4 @@ This will generate an image with Original image, masked image and a reconstructe
 
 ## Some Results
 
-Check out this short post covering the methodology and results visualization: https://echonax07.github.io/projects/1_project/
+Check out this short post covering the methodology and results visualization: https://echonax07.github.io/projects/1_project/. Ablation experiments are compiled at [wandb report](https://wandb.ai/mmwhale/MAE-finetune/reports/Ablation-studies-for-the-MAE-pretraining-of-SAR-images--Vmlldzo3NTc0MzQ4). This project is part of a course report and the report will be available soon.
