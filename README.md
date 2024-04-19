@@ -2,11 +2,14 @@
 
 This repo is built on top of [MMSelfsup](MMSelfsup), a self-supervised representation learning toolbox based on PyTorch. This repo is particularly useful for building foundation models as all the known methods are implemented. However the REPO is designed for General computer vision task and  not for remote sensing or other data. This repo contains the code to use Remote sensing data for self supervised pretraining. 
 
-The following changes were made to the original repo:
+#### Key enhancements
 
 - Add a dataloader for loading images from NetCDF(.nc) file 
 - Support the MAE architecture to allow variable number of input channels contrast to RGB data with only 3 channels
 - MAE Reconstruction visualization: Plot each channel individually as opposed to RGB channels
+
+
+This repository builds on [MMSelfsup](MMSelfsup), a self-supervised representation learning toolbox based on PyTorch. While MMSelfsup is designed for general computer vision tasks, this repository extends its functionality to support remote sensing data. It includes code for self-supervised pretraining specifically tailored for remote sensing applications.
 
 
 ## Getting Started:
@@ -32,37 +35,15 @@ To enable submitting multiple jobs easier on slurm (especially when the user wan
 #!/bin/bash 
 set -e
 mmselfsup_config=( 
-configs/selfsup/ai4arctic/mae_vit-base-p16_8xb512-amp-coslr-300e_ai4arctic.py
-configs/selfsup/ai4arctic/mae_ai4arctic_ds5_pt_80_ft_20.py
-configs/selfsup/ai4arctic/mae_ai4arctic_ds5_pt_80_ft_20_l1loss.py
-configs/selfsup/ai4arctic/mae_ai4arctic_ds5_pt_90_ft_10.py
-configs/selfsup/ai4arctic/mae_ai4arctic_ds2_pt_80_ft_20.py
-configs/selfsup/ai4arctic/mae_ai4arctic_ds10_pt_80_ft_20.py
-configs/selfsup/crop_size/mae_ai4arctic_cs256_ds5_pt_80_ft_20.py
-configs/selfsup/crop_size/mae_ai4arctic_cs1024_ds5_pt_80_ft_20.py
-configs/selfsup/ai4arctic/mae_ai4arctic_ds5_pt_95_ft_5.py
-configs/selfsup/ai4arctic/mae_ai4arctic_ds5_pt_50_ft_50.py
 configs/selfsup/mask_ratio/mae_ai4arctic_ds5_pt_80_ft_20_mr50.py
 configs/selfsup/mask_ratio/mae_ai4arctic_ds5_pt_80_ft_20_mr90.py
 configs/selfsup/mask_ratio/mae_ai4arctic_ds5_pt_80_ft_20_mr25.py
 )
 
-mmseg_config=( 
-configs/selfsup/ai4arctic/mae_vit-base-p16_8xb512-amp-coslr-300e_ai4arctic.py
-configs/ai4arctic/upernet_vit_finetune_neck_replaced.py
-configs/ai4arctic/mae_ai4arctic_ds5_pt_80_ft_20.py
-configs/ai4arctic/mae_ai4arctic_ds5_pt_80_ft_20_l1loss.py
-configs/ai4arctic/mae_ai4arctic_ds5_pt_90_ft_10.py
-configs/ai4arctic/mae_ai4arctic_ds2_pt_80_ft_20.py
-configs/ai4arctic/mae_ai4arctic_ds10_pt_80_ft_20.py
-configs/crop_size/mae_ai4arctic_cs256_pt_80_ft_20.py
-configs/crop_size/mae_ai4arctic_cs1024_pt_80_ft_20.py
-configs/ai4arctic/mae_ai4arctic_ds5_pt_95_ft_5.py
-configs/ai4arctic/mae_ai4arctic_ds5_pt_50_ft_50.py
+mmseg_config=(
 configs/mask_ratio/mae_ai4arctic_ds5_pt_80_ft_20_mr50.py
 configs/mask_ratio/mae_ai4arctic_ds5_pt_80_ft_20_mr90.py
 configs/mask_ratio/mae_ai4arctic_ds5_pt_80_ft_20_mr25.py
-configs/ai4arctic/mae_ai4arctic_ds10_pt_80_ft_20.py
 )
 
 for i in "${!mmseg_config[@]}"; do
