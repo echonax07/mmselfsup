@@ -19,7 +19,7 @@ Install the required packages and dependencies by running
 ```linux
 bash compute_canada/submit/create_env.sh <env_name>
 ```
-This will create a virtualenv at the location ~/<env_name>. (~ stands for root/home folder)
+This will create a virtualenv at the location \~/<env_name>. (\~ stands for root/home folder)
 
 ### Creating config file
 
